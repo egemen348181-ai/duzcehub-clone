@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="240" viewBox="0 0 1200 240">
+  <defs>
+    <linearGradient id="b" x1="0" x2="1">
+      <stop offset="0" stop-color="#021025" />
+      <stop offset="1" stop-color="#120717" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="240" fill="url(#b)" />
+  <g fill="#ffffff" opacity="0.06">
+    <circle cx="80" cy="120" r="180" />
+    <circle cx="320" cy="40" r="140" />
+    <circle cx="920" cy="180" r="200" />
+  </g>
+  <text x="60" y="140" fill="#eaf3ff" font-family="Inter, Arial" font-weight="700" font-size="48">DüzceHUB — Düzce'nin Topluluk Alanı</text>
+  <text x="60" y="180" fill="#93a6bd" font-family="Inter, Arial" font-weight="500" font-size="20">Sohbet, forum, ilanlar ve daha fazlası</text>
+</svg>
