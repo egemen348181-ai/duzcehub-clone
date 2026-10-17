@@ -10,6 +10,10 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { createClient } from 'redis';
+import { createAdapter } from '@socket.io/redis-adapter';
+
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -21,13 +25,30 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// S3 client (optional)
+let s3: S3Client | null = null;
+const S3_BUCKET = process.env.S3_BUCKET;
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && S3_BUCKET) {
+  s3 = new S3Client({ region: process.env.AWS_REGION });
+  console.log('S3 enabled');
+}
+
+// Redis adapter for socket.io (optional)
+if (process.env.REDIS_URL) {
+  const pubClient = createClient({ url: process.env.REDIS_URL });
+  const subClient = pubClient.duplicate();
+  Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('Socket.io Redis adapter configured');
+  }).catch((e) => console.error('Redis connection error', e));
+}
 
 // Ensure uploads dir
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
-// Multer
+// Multer - saves to disk, will upload to S3 if configured
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadsDir);
@@ -88,9 +109,28 @@ app.get('/api/posts', async (req, res) => {
 
 app.post('/api/posts', authMiddleware, upload.single('image'), async (req: any, res) => {
   const { content } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
+  let imageUrl: string | null = null;
+
+  if (req.file) {
+    if (s3) {
+      // Upload to S3 and remove local file
+      const filePath = path.join(uploadsDir, req.file.filename);
+      const fileStream = fs.createReadStream(filePath);
+      const key = req.file.filename;
+      try {
+        await s3.send(new PutObjectCommand({ Bucket: S3_BUCKET!, Key: key, Body: fileStream, ACL: 'public-read' }));
+        imageUrl = `https://${S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+        fs.unlinkSync(filePath);
+      } catch (e) {
+        console.error('S3 upload failed', e);
+      }
+    } else {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+  }
+
   const authorId = (req.user as any).id;
-  const post = await prisma.post.create({ data: { content, image, authorId } });
+  const post = await prisma.post.create({ data: { content, image: imageUrl, authorId } });
   io.emit('new_post', post);
   res.json(post);
 });
