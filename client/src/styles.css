@@ -1,16 +1,9 @@
-/* Minimal styles to evoke the dark theme */
-:root{ --bg:#070b10; --panel:#0d1720; --muted:#a7b5c3; --accent:#31e0b0; }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#eef3ff;font-family:Inter,system-ui,Arial,sans-serif}
-.container{max-width:900px;margin:24px auto;padding:0 16px}
-.top{display:flex;justify-content:space-between;align-items:center}
-.composer textarea{width:100%;min-height:80px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.02);color:inherit}
-.composer-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-.posts{margin-top:20px;display:flex;flex-direction:column;gap:12px}
-.post{background:var(--panel);padding:12px;border-radius:12px}
-.post img{max-width:100%;border-radius:8px;margin-top:8px}
-.auth{display:grid;place-items:center;height:100vh}
-.auth .card{background:var(--panel);padding:20px;border-radius:12px;display:flex;flex-direction:column;gap:8px;width:320px}
-.auth input{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
-.auth button{padding:10px;border-radius:8px;border:0;background:var(--accent);color:#012;cursor:pointer}
-.auth .link{background:transparent;color:var(--muted);}
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
